@@ -72,3 +72,127 @@ for token, probs in prediction_dict.items():
 headers = ["Token"] + tag_labels
 table = tabulate(table_data, headers=headers, tablefmt="json")
 print(table)
+
+----------------------------------------------------------------------------------------------------------
+
+import string
+text_train="Google hired XYZ in 2005, for $100,000 per annum."
+
+
+text_train_tags = {
+    'Google' : 'company',
+    'hired'  : 'vbd',
+    'XYZ'    : 'person',
+    'in'     : 'cc',
+    '2005'   : 'date',
+    'for'    : 'in',
+    '100000' : 'amount',
+    'per'    : 'in',
+    'annum'  : 'duration'
+}
+text_test = 'Apple hired ABC in 1995, for $10 per hour.'
+
+text_train=''.join([word for word in text_train if word not in string.punctuation]).split(" ")
+text_test=''.join([word for word in text_test if word not in string.punctuation]).split(" ")
+
+print(f"Train data : {text_train}\nTest data : {text_test}")
+
+import numpy as np
+def softmax(x):
+  e_x =np.exp(x-np.max(x))
+  return np.round(e_x / e_x.sum(axis=0),3)
+
+
+feature_func =[
+    lambda position , label1, label2 : 1 if position == 0 else 0,
+    lambda position , label1, label2 : 1 if label1   == 'company' and label2 == 'vbd'      else 0,
+    lambda position , label1, label2 : 1 if label1   == 'vbd'     and label2 == 'person'   else 0,
+    lambda position , label1, label2 : 1 if label1   == 'person'  and label2 == 'cc'       else 0,
+    lambda position , label1, label2 : 1 if label1   == 'cc'      and label2 == 'date'     else 0,
+    lambda position , label1, label2 : 1 if label1   == 'date'    and label2 == 'in'       else 0,
+    lambda position , label1, label2 : 1 if label1   == 'in'      and label2 == 'amount'   else 0,
+    lambda position , label1, label2 : 1 if label1   == 'amount'  and label2 == 'in'       else 0,
+    lambda position , label1, label2 : 1 if label1   == 'in'      and label2 == ' ' else 0
+]
+
+import numpy as np
+from sklearn import preprocessing
+np.set_printoptions(suppress=True)
+print(text_train)
+epochs = 30
+l_rate = 0.05
+weights = np.random.rand
+
+"""# Using Library"""
+
+!pip install python-crfsuite
+
+import pycrfsuite
+
+# Training data
+text_train = "Google hired XYZ in 2005, for $100,000 per annum."
+text_train_tags = {
+    'Google': 'company',
+    'hired': 'vbd',
+    'XYZ': 'person',
+    'in': 'cc',
+    '2005': 'date',
+    'for': 'in',
+    '100000': 'amount',
+    'per': 'in',
+    'annum': 'duration'
+}
+
+# Feature extraction function
+def word2features(sent, i):
+    word = sent[i]
+    features = {
+        'bias': 1.0,
+        'word.lower()': word.lower(),
+    }
+    return features
+
+# Convert the data into the required format
+def text2features(words):
+    return [word2features(words, i) for i in range(len(words))]
+
+def text2labels(text_tags):
+    return list(text_tags.values())
+
+def text2tokens(text):
+    return text.split()
+
+# Prepare the training data
+words = text2tokens(text_train)
+X_train = [text2features(words)]
+y_train = [text2labels(text_train_tags)]
+
+# Create and train the CRF model
+trainer = pycrfsuite.Trainer()
+for xseq, yseq in zip(X_train, y_train):
+    trainer.append(xseq, yseq)
+
+trainer.set_params({
+    'c1': 1.0,   # coefficient for L1 penalty
+    'c2': 1e-3,  # coefficient for L2 penalty
+    'max_iterations': 50,
+    'feature.possible_transitions': True
+})
+
+trainer.train('ner_model.crfsuite')
+
+# Load the trained model
+tagger = pycrfsuite.Tagger()
+tagger.open('ner_model.crfsuite')
+
+# Test data
+text_test = 'Apple hired ABC in 1995, for $10 per hour.'
+test_words = text2tokens(text_test)
+test_features = text2features(test_words)
+
+# Perform prediction
+tagger.set(test_features)
+predicted_labels = tagger.tag()
+
+# Print the predicted labels
+print("Predicted Labels:", predicted_labels)
