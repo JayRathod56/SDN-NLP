@@ -1,0 +1,87 @@
+import numpy as np
+
+label=['NNP','MD','VB','JJ','NN','RB','DT']
+words=['Janet','will','back','the','bill']
+
+start_seq = np.array([0.2767, 0.0006, 0.0031, 0.0453, 0.0449, 0.0510, 0.2026])
+
+
+transition_probs = np.array([
+    [0.3777, 0.0110, 0.0009, 0.0084, 0.0584, 0.0090, 0.0025],
+    [0.0008, 0.0002, 0.7968, 0.0005, 0.0008, 0.1698, 0.0041],
+    [0.0322, 0.0005, 0.0050, 0.0837, 0.0615, 0.0514, 0.2231],
+    [0.0366, 0.0004, 0.0001, 0.0733, 0.4509, 0.0036, 0.0036],
+    [0.0096, 0.0176, 0.0014, 0.0086, 0.1216, 0.0177, 0.0068],
+    [0.0068, 0.0102, 0.1011, 0.1012, 0.0120, 0.0728, 0.0479],
+    [0.1147, 0.0021, 0.0002, 0.2157, 0.4744, 0.0102, 0.0017]
+])
+
+transition_probs = np.round(transition_probs, decimals= 2)
+
+observation_probs = np.array([
+    [0.000032, 0, 0, 0.000048, 0],
+    [0, 0.308431, 0, 0, 0],
+    [0, 0.000028, 0.000672, 0, 0.000028],
+    [0, 0, 0.000340, 0, 0],
+    [0, 0.000200, 0.000223, 0, 0.002337],
+    [0, 0, 0.010446, 0, 0],
+    [0, 0, 0, 0.506099, 0]
+])
+
+sentence = "Janet will back the bill"
+
+print("Observation Probablities")
+print(observation_probs)
+
+print("\n\nTransistion Probablities")
+print(transition_probs)
+
+print("\n\n Sentence: ", sentence)
+
+# Define the POS tags
+tags = ['NNP', 'MD', 'VB', 'JJ', 'NN', 'RB', 'DT']
+
+# Initialize the matrices
+num_words = len(sentence.split())
+num_tags = len(tags)
+matrix = np.zeros((num_words, num_tags))
+backpointer = np.zeros((num_words, num_tags), dtype=int)
+
+
+
+# Step 1: Compute the initial probabilities
+for j in range(num_tags):
+    matrix[0, j] = start_seq[j] * observation_probs[j, 0]  # Multiply by emission probability of Janet
+
+# Step 2: Perform the dynamic programming steps
+for i in range(1, num_words):
+    for j in range(num_tags):
+        max_prob = -1
+        max_index = -1
+        for k in range(num_tags):
+            prob = matrix[i-1, k] * transition_probs[k, j]
+            if prob > max_prob:
+                max_prob = prob
+                max_index = k
+        matrix[i, j] = max_prob * observation_probs[j, i]
+        backpointer[i, j] = max_index
+
+# final matrix
+print(matrix)
+
+# Step 3: Perform backtracking to find the most likely sequence
+best_path_prob = np.max(matrix[-1])
+best_path_end_tag = np.argmax(matrix[-1])
+best_path = [best_path_end_tag]
+
+
+for i in range(num_words - 1, 0, -1):
+    best_path_end_tag = backpointer[i, best_path_end_tag]
+    best_path.insert(0, best_path_end_tag)
+
+# Map the tag indices to actual tags
+best_path_tags = [tags[tag_index] for tag_index in best_path]
+
+# Print the most likely sequence of POS tags
+print("\nMost likely sequence of POS tags:")
+print(best_path_tags)
