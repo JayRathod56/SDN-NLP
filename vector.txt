@@ -95,3 +95,88 @@ updated_sentence = "I love eating pizza and pasta."
 # Obtain updated word embeddings
 updated_embeddings = update_word_embeddings(initial_embeddings, updated_sentence)
 print(f"\nUpdated Embedding for '{word}': {updated_embeddings[word]}")
+
+----------------------------------------------------------------------------------------------------
+
+
+sentence = "The Quick brown fox jumps over the lazy dog"
+
+sentence2 = "Consider an nlp's brown corpus and skipgram based task that requires brian"
+
+target_word = "fox"
+
+def sentence_to_list(sent):
+  lit = sent.split()
+
+  return lit
+
+lit = sentence_to_list(sentence)
+
+def list_to_dic_with_embedings(lit):
+
+  dic = {}
+
+  import random
+
+  for j in range(len(lit)):
+    embiding = []
+    for i in range(4):
+
+      embiding.append(random.randint(0,10))
+
+      import numpy as np
+      arr = np.array(embiding)
+
+    dic = {**dic, lit[j]: arr}
+
+  return dic
+
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+
+
+
+# Dynamic word embiddings
+word_embeddings = list_to_dic_with_embedings(lit)
+
+print("\n\nWord Embeddings")
+print(word_embeddings)
+
+# Split sentences into words
+words1 = sentence.split()
+print(words1)
+words2 = sentence2.split()
+
+# Find the target word (e.g., the first word in sentence1)
+print("\ntarget word : ", target_word)
+
+# Calculate embeddings for each word in sentence1 and sentence2
+embeddings1 = [word_embeddings.get(word, np.zeros(4)) for word in words1]
+embeddings2 = [word_embeddings.get(word, np.zeros(4)) for word in words2]
+
+print("\n\nEmbeddings 1 and 2")
+
+print(embeddings1)
+print(embeddings2)
+
+print("\n\n\n Initial Embeddings")
+print(embeddings1,embeddings2)
+# Calculate cosine similarity between target word embedding and all context word embeddings
+target_embedding = word_embeddings.get(target_word, np.zeros(4))
+similarities = cosine_similarity([target_embedding], embeddings2)[0]
+
+# Sample positive and negative context probabilities
+p_positive = 0.8  # Probability of positive context
+p_negative = [0.2, 0.3, 0.1, 0.4]  # Probabilities of negative contexts
+
+# Apply LCE formula to adjust the embeddings
+lce_adjusted_embeddings = []
+for similarity, context_embedding, p_neg in zip(similarities, embeddings2, p_negative):
+    p_pos = p_positive
+    lce = -np.log(p_pos) + np.sum([-np.log(p_neg)])
+    lce_adjusted_embedding = target_embedding + lce * context_embedding
+    lce_adjusted_embeddings.append(lce_adjusted_embedding)
+
+print("\n\n\nUpdated Embeddings")
+print(lce_adjusted_embeddings)
+print("Similarity: ",similarity)
