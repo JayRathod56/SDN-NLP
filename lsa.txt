@@ -1,0 +1,45 @@
+import pandas as pd
+import numpy as np
+from collections import Counter
+from ordered_set import OrderedSet
+d1= "The cow jumped over the moon"
+d2 = "O'Leary's cow kicked the lamp"
+d3= "The kicked lamp started a fire"
+d4 = "The cow on fire"
+
+def term_doc(*docs):
+  dd = []
+  for doc in docs:
+    dd.append(list(map(lambda x : x.lower(), doc.split(' '))))
+  counts = dict()
+  for idx, doc in enumerate(dd):
+    counts[idx] = Counter (doc)
+
+  mat = pd.DataFrame (counts).replace(np.nan, 0)
+  words= list(OrderedSet([word for doc in dd for word in doc]))
+  return mat, words
+
+mat, words = term_doc (d1, d2, d3, d4)
+print(mat)
+
+u, s, vt = np.linalg.svd (mat, full_matrices=False)
+print(u,s,vt)
+
+Ap=np.round(u, decimals=2)
+
+def sim(w1, w2):
+    idx_w1 = words.index(w1)
+    idx_w2 = words.index(w2)
+
+    dot = np.dot(Ap[idx_w1], Ap[idx_w2])
+    div = len(Ap[idx_w1]) * len(Ap[idx_w2])
+    return dot / div
+
+similarity1 = sim('the', 'cow')
+print("Similarity between 'the' and 'cow':", similarity1)
+
+similarity2 = sim('the', 'over')
+print("Similarity between 'the' and 'over':", similarity2)
+
+similarity3 = sim('over', 'lamp')
+print("Similarity between 'over' and 'lamp':", similarity3)
