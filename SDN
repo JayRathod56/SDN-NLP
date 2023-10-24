@@ -1,0 +1,214 @@
+vlan 10
+name Bhavesh
+vlan 20
+name onkar
+int f0/0
+switchport mode access
+switchport access vlan 10
+
+int f0/5
+switchport mode trunk
+
+[if you want inter-vlan]
+int f0/0.10
+encapsulation dot1q 10
+ip add 192.168.1.1 255.255.255.0
+
+-----------------------------------
+
+router ospf 1
+network 192.168.1.0 255.255.255.0 area 0
+network 10.0.0.0 0.0.0.255 area 0
+
+-----------------------------------
+
+sudo apt-get update
+sudo apt-get install xinit flwm
+[switch network of wm to bridge of miniet]
+ifconfig
+[on ubuntu]
+sudo apt-get update
+ssh -Y mininet@[ip addr of mininet]
+
+-----------------------------------
+
+sudo apt-get update
+sudo apt-get install xinit flwm
+startx
+[UXTerm]
+sudo ~/mininet/examples/miniedit.py
+
+----------------------------------
+
+sudo mn
+
+nodes
+# giwes info about nodes
+
+net
+# giwes info about connections
+
+links
+# giwes if the links are on or hawing issues
+
+h1 ifconfig -a
+# giwes detailed ifconfig about h1
+
+h1 ping -c5 h2
+c5 means it will test 5 packets
+
+pingall
+
+exit
+#stops all the controller, links, switches and hosts
+
+mn -c
+
+sudo mn --topo single,3
+
+sudo mn --topo linear,3
+
+sudo mn --topo tree,3 
+
+-----------------------------------
+
+#!/usr/bin/env python
+
+from mininet.net import Mininet
+from mininet.node import Controller
+from mininet.link import Link, TCLink
+from mininet.log import setLogLevel
+
+def create_topology(host_count, switch_count, links_per_switch):
+    net = Mininet(controller=Controller)
+    hosts = []
+    switches = []
+    
+    for i in range(host_count):
+        host = net.addHost('h{}'.format(i+1))
+        hosts.append(host)
+    
+    for i in range(switch_count):
+        switch = net.addSwitch('s{}'.format(i+1))
+        switches.append(switch)
+        
+        for j in range(links_per_switch):
+            net.addLink(switches[i], hosts[links_per_switch * i + j])
+    
+    net.start()
+    
+    print("Network Interfaces:")
+    for host in hosts:
+        print(host.name, host.IP())
+    
+    print("Testing Connectivity:")
+    net.pingAll()
+    
+    net.stop()
+
+if __name__ == '__main__':
+    setLogLevel('info')
+    
+    print("Simple Topology:")
+    create_topology(2, 1, 2)
+    
+    print("\nLinear Topology:")
+    create_topology(4, 4, 1)
+    
+    print("\nTree Topology:")
+    create_topology(5, 5, 2)
+
+
+----------------------------------------------------
+
+
+#!/usr/bin/env python
+
+from mininet.net import Mininet
+from mininet.node import Controller
+from mininet.link import Link, TCLink
+from mininet.log import setLogLevel
+
+def simple_topology():
+    net = Mininet(controller=Controller)
+    h1 = net.addHost('h1')
+    h2 = net.addHost('h2')
+    s1 = net.addSwitch('s1')
+    
+    net.addLink(h1, s1)
+    net.addLink(h2, s1)
+    
+    net.start()
+    
+    print("Network Interfaces:")
+    for host in [h1, h2]:
+        print(host.name, host.IP())
+    
+    print("Testing Connectivity:")
+    net.pingAll()
+    
+    net.stop()
+
+def linear_topology():
+    net = Mininet(controller=Controller)
+    hosts = []
+    switches = []
+    
+    for i in range(3):
+        host = net.addHost('h{}'.format(i+1))
+        hosts.append(host)
+        switch = net.addSwitch('s{}'.format(i+1))
+        switches.append(switch)
+        
+        net.addLink(host, switch)
+        if i > 0:
+            net.addLink(switches[i-1], switch)
+    
+    net.start()
+    
+    print("Network Interfaces:")
+    for host in hosts:
+        print(host.name, host.IP())
+    
+    print("Testing Connectivity:")
+    net.pingAll()
+    
+    net.stop()
+
+def custom_topology():
+    net = Mininet(controller=Controller)
+    h1 = net.addHost('h1')
+    h2 = net.addHost('h2')
+    h3 = net.addHost('h3')
+    h4 = net.addHost('h4')
+    s1 = net.addSwitch('s1')
+    s2 = net.addSwitch('s2')
+    
+    net.addLink(h1, s1)
+    net.addLink(h2, s1)
+    net.addLink(h3, s2)
+    net.addLink(h4, s2)
+    net.addLink(s1, s2)
+    
+    net.start()
+    
+    print("Network Interfaces:")
+    for host in [h1, h2, h3, h4]:
+        print(host.name, host.IP())
+    
+    print("Testing Connectivity:")
+    net.pingAll()
+    
+    net.stop()
+
+if __name__ == '__main__':
+    setLogLevel('info')
+    
+    print("Simple Topology:")
+    simple_topology()
+    
+    print("\nLinear Topology:")
+    linear_topology()
+    
+    print("\nCustom Topology:")
+    custom_topology()
