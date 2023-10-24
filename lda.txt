@@ -78,3 +78,51 @@ for iteration in range(max_iterations):
     dtm = dtm_new
     p1 = p1_new
     p2 = p2_new
+
+---------------------------------------------------------------------------------------------------------------------------------------
+
+from gensim import corpora, models
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+
+# Sample documents
+documents = [
+    "I want to watch a movie this weekend.",
+    "I went shopping yesterday. India won the World Test Championship by beating New Zealand by eight wickets at Southampton.",
+    "I don’t watch cricket. Netflix and Amazon Prime have very good movies to watch.",
+    "Movies are a nice way to chill however, this time I would like to paint and read some good books. It’s been so long!",
+    "This blueberry milkshake is so good! Try reading Dr. Joe Dispenza’s books. His work is such a game-changer! His books helped to learn so much about how our thoughts impact our biology and how we can all rewire our brains."
+]
+
+# Preprocess documents: lowercase, tokenize, and remove stopwords
+stop_words = set(stopwords.words("english"))
+
+def preprocess(document):
+    tokens = [word for word in word_tokenize(document.lower()) if word.isalnum()]
+    return [word for word in tokens if word not in stop_words]
+
+# Preprocessed documents
+preprocessed_documents = [preprocess(doc) for doc in new_documents]
+
+# Create a dictionary from the preprocessed documents
+dictionary = corpora.Dictionary(preprocessed_documents)
+
+# Create a bag-of-words corpus
+corpus = [dictionary.doc2bow(doc) for doc in preprocessed_documents]
+
+# Perform LDA
+num_topics = 6  # Number of topics to extract
+lda_model = models.LdaModel(corpus, num_topics=num_topics, id2word=dictionary, passes=10)
+
+# Print the topics and their top words
+print("Topic Word Matrix")
+print('~'*100)
+for topic_id, topic_words in lda_model.print_topics():
+    print(f"Topic {topic_id}: {topic_words}")
+
+# Get the topic distribution for each document
+print('\nDocument Topic Matrix')
+print("~"*100)
+for doc_id, doc_topics in enumerate(lda_model.get_document_topics(corpus)):
+    print(f"Document {doc_id}: {doc_topics}")
+
